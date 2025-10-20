@@ -186,14 +186,37 @@ Look for your microphone in the output and note its device ID number. Add it to 
 
 ## Development
 
-### Using DevContainer
+### Local Development (Recommended for Client)
 
-This project includes a DevContainer configuration for VS Code:
+Since the **client must run on Windows** (requires system hotkeys, audio, and keyboard access), you'll typically develop locally:
+
+1. **Install VS Code Extensions**
+   - Press `Ctrl+Shift+X` to open Extensions
+   - Install recommended extensions (especially **Python** by Microsoft)
+   - Or click "Install All" when VS Code prompts for workspace recommendations
+
+2. **Setup Python Environment**
+   ```bash
+   # Install dependencies
+   pip install -r client/requirements.txt
+   pip install -r server/requirements.txt
+   ```
+
+3. **Start Development**
+   - Press `F5` to debug client or server
+   - Press `Ctrl+Shift+P` → "Tasks: Run Task" to run tasks
+   - See `.vscode/SETUP.md` for detailed VS Code configuration
+
+### Using DevContainer (Server Development Only)
+
+For server-only development, you can use the DevContainer:
 
 1. Install [VS Code](https://code.visualstudio.com/) and [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 2. Open the project in VS Code
 3. Click "Reopen in Container" when prompted
-4. Development environment will be automatically configured
+4. Extensions install automatically; server dependencies are pre-installed
+
+**Note**: The client cannot run in the DevContainer (needs Windows host access)
 
 ### Running Tests
 
