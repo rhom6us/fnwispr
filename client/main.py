@@ -11,7 +11,7 @@ import tempfile
 import threading
 from pathlib import Path
 from typing import Optional
-
+import traceback
 import numpy as np
 import pyautogui
 import sounddevice as sd
@@ -244,32 +244,59 @@ class FnwisprClient:
             logger.warning("No audio data recorded")
             return
 
+        temp_path = None
         try:
+            import time
+
             # Concatenate audio data
+            logger.debug(f"Audio chunks recorded: {len(self.audio_data)}")
             audio = np.concatenate(self.audio_data, axis=0)
+            logger.debug(f"Audio shape: {audio.shape}, dtype: {audio.dtype}, min: {audio.min():.4f}, max: {audio.max():.4f}")
 
-            # Save to temporary WAV file
-            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
-                temp_path = temp_file.name
-                write_wav(temp_path, self.sample_rate, audio)
+            # Create temporary file in system temp directory
+            temp_dir = tempfile.gettempdir()
+            import uuid
 
-            logger.info(f"Audio saved to temporary file: {temp_path}")
+            temp_filename = f"fnwispr_audio_{uuid.uuid4().hex[:8]}.wav"
+            temp_path = os.path.join(temp_dir, temp_filename)
 
-            # Send to server for transcription
-            transcribed_text = self.transcribe_audio(temp_path)
-
-            # Clean up temporary file
+            # Write audio data directly to file with error handling
             try:
-                os.unlink(temp_path)
-            except Exception as e:
-                logger.warning(f"Failed to delete temporary file: {e}")
+                write_wav(temp_path, self.sample_rate, audio)
+                logger.info(f"Audio saved to temporary file: {temp_path}")
+            except Exception as write_err:
+                logger.error(f"Failed to write WAV file: {write_err}")
+                raise
+
+            # Verify file exists immediately after writing
+            if os.path.exists(temp_path):
+                file_size = os.path.getsize(temp_path)
+                logger.debug(f"WAV file created successfully. Size: {file_size} bytes")
+            else:
+                raise FileNotFoundError(f"WAV file was not created at {temp_path}")
+
+            # Give Windows filesystem time to flush
+            time.sleep(0.1)
+
+            # Send to local Whisper for transcription
+            transcribed_text = self.transcribe_audio(temp_path)
 
             if transcribed_text:
                 # Insert text at cursor position
                 self.insert_text(transcribed_text)
 
         except Exception as e:
-            logger.error(f"Error processing audio: {e}")
+            logger.error(f"Error processing audio: {e}", exc_info=True)
+
+        finally:
+            # Clean up temporary file
+            if temp_path and os.path.exists(temp_path):
+                try:
+                    time.sleep(0.05)
+                    os.unlink(temp_path)
+                    logger.debug(f"Cleaned up temporary file: {temp_path}")
+                except Exception as e:
+                    logger.warning(f"Failed to delete temporary file {temp_path}: {e}")
 
     def transcribe_audio(self, audio_path: str) -> Optional[str]:
         """
@@ -282,15 +309,43 @@ class FnwisprClient:
             Transcribed text or None if failed
         """
         try:
+            from scipy.io import wavfile
+
             language = self.config.get("language")
+
+            logger.info(f"Transcribing audio file: {audio_path}")
+
+            # Load audio directly using scipy to avoid ffmpeg dependency
+            sample_rate_file, audio_data = wavfile.read(audio_path)
+            logger.debug(f"Loaded audio: sample_rate={sample_rate_file}, shape={audio_data.shape}, dtype={audio_data.dtype}")
+
+            # Convert to float32 and normalize (Whisper expects float32 in range [-1, 1])
+            if audio_data.dtype != np.float32:
+                # Convert to float32
+                audio_float = audio_data.astype(np.float32)
+                # Normalize to [-1, 1] range
+                if audio_data.dtype == np.int16:
+                    audio_float = audio_float / 32768.0
+                elif audio_data.dtype == np.int32:
+                    audio_float = audio_float / 2147483648.0
+                elif audio_data.dtype == np.uint8:
+                    audio_float = (audio_float - 128) / 128.0
+            else:
+                audio_float = audio_data
+
+            # Ensure mono (if stereo, take first channel)
+            if len(audio_float.shape) > 1:
+                audio_float = audio_float[:, 0]
+
+            logger.debug(f"Prepared audio: shape={audio_float.shape}, dtype={audio_float.dtype}, min={audio_float.min():.4f}, max={audio_float.max():.4f}")
 
             # Build transcribe options
             transcribe_options = {}
             if language:
                 transcribe_options["language"] = language
 
-            logger.info(f"Transcribing audio file: {audio_path}")
-            result = self.whisper_model.transcribe(audio_path, **transcribe_options)
+            # Transcribe using the audio data directly (not file path)
+            result = self.whisper_model.transcribe(audio_float, language=language)
 
             transcribed_text = result.get("text", "").strip()
             detected_language = result.get("language")
@@ -301,6 +356,7 @@ class FnwisprClient:
             return transcribed_text
 
         except Exception as e:
+            logger.error(traceback.format_exc())
             logger.error(f"Transcription error: {e}")
             return None
 
