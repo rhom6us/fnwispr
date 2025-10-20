@@ -4,36 +4,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-fnwispr is a Windows speech-to-text tool using a **hybrid architecture**:
-- **Client** (`client/`): Windows-only Python application that handles hotkey detection, audio recording, and text insertion
-- **Server** (`server/`): Cross-platform FastAPI service running in Docker that performs speech transcription using OpenAI Whisper
-- **Communication**: Local HTTP REST API on port 8000
+fnwispr is a **unified Windows speech-to-text application** with local processing:
+- **Single Application**: Windows-only Python application (`client/main.py`)
+- **No Server Component**: All speech recognition happens locally using OpenAI's Whisper
+- **System Tray GUI**: Graphical interface for configuration and control
+- **Local Processing**: Everything runs on the user's machine without external services
 
-**Critical architectural constraint**: The client CANNOT run in Docker because it requires direct access to:
+**Architecture Highlights**:
 1. Windows global hotkeys (via `pynput`)
 2. System audio devices (via `sounddevice`)
 3. Host OS keyboard input simulation (via `pyautogui`)
+4. Local Whisper model for transcription
+5. System tray icon with context menu
+6. Tkinter-based settings window
 
 ## Development Commands
 
 ### Build & Run
 
 ```bash
-# Build and start Whisper service (Docker)
-docker-compose build
-docker-compose up -d
+# Install dependencies
+pip install -r client/requirements.txt
+pip install -r requirements-dev.txt  # for development
 
-# Start server for local development (no Docker)
-cd server && python main.py
-# or use VS Code task: "Run: Server (Local)"
+# Run the application
+python client/main.py
 
-# Run Windows client (must be run on Windows host)
-cd client && python main.py
-# or use VS Code task: "Run: Client"
+# Or use VS Code task: "Run: fnwispr"
 
-# Full rebuild and restart
-docker-compose down && docker-compose build && docker-compose up -d
-# or use VS Code task: "Dev: Rebuild and Restart"
+# Run with debugger
+# Use VS Code: F5 to debug, or task "Debug: fnwispr"
 ```
 
 ### Testing
@@ -43,10 +43,26 @@ docker-compose down && docker-compose build && docker-compose up -d
 pytest tests/ -v
 
 # Run with coverage
-pytest tests/ --cov=server --cov=client --cov-report=html
+pytest tests/ --cov=client --cov-report=html
 
 # Or use VS Code tasks: "Test: All Tests", "Test: Coverage Report"
 ```
+
+### New Modules
+
+**GUI Components** (added for system tray integration):
+- `client/gui.py` - Tkinter settings window with tabs for Recording, Model, and General settings
+- `client/tray.py` - System tray icon with context menu for quick access (pystray)
+- `client/alerts.py` - Alert dialogs for user notifications (messagebox)
+
+**Key Features**:
+- System tray icon in bottom-right with context menu
+- Double-click or right-click → Settings to open configuration window
+- Quick model selection from tray menu without opening settings
+- Quick microphone device selection from tray menu
+- Microphone error alerts on startup and configuration changes
+- First-run setup wizard
+- Configuration auto-migration from old location to `~/.fnwispr/config.json`
 
 ### Linting & Formatting
 
@@ -158,6 +174,111 @@ Performance vs accuracy tradeoff:
 Change model via:
 1. Client config: `"model": "small"` (per-request selection)
 2. Server env: `WHISPER_MODEL=small` (startup default)
+
+## Client Architecture Details
+
+### Main Application Flow
+
+1. **Initialization** (`FnwisprClient.__init__`)
+   - Load config from `~/.fnwispr/config.json` (auto-migrate from old location)
+   - Load Whisper model
+   - Initialize microphone with error handling
+   - Parse hotkey configuration
+
+2. **Startup** (`FnwisprClient.run`)
+   - Check if first run (show settings window if true)
+   - Start keyboard listener in background thread
+   - Initialize system tray icon with SVG icon conversion
+   - Show tray menu with Model and Microphone submenus
+   - Run event loop (blocking)
+
+3. **Recording Flow**
+   - Global keyboard listener detects hotkey combo
+   - `on_press` tracks currently pressed keys
+   - When all hotkey keys pressed: `start_recording()` begins audio stream
+   - `on_release` stops recording when any hotkey key released
+   - Audio chunks collected via sounddevice callback
+   - `process_audio()` runs in separate thread (non-blocking)
+
+4. **Audio Processing**
+   - Concatenate audio chunks from multiple callbacks
+   - Write to temporary WAV file
+   - Load with scipy (avoids ffmpeg dependency)
+   - Normalize to float32 in [-1, 1] range
+   - Convert stereo to mono if needed
+   - Pass to Whisper.transcribe()
+   - Clean up temp file
+   - Insert text with pyautogui if transcription succeeds
+
+### Configuration Management
+
+- **Location**: `~/.fnwispr/config.json` (user profile directory)
+- **Auto-Migration**: Old `./config.json` auto-migrated on first run with new fields
+- **Fields**:
+  - `hotkey`: String like "ctrl+win", "ctrl_l+alt", supports all pynput modifiers
+  - `model`: Whisper size (tiny/base/small/medium/large)
+  - `sample_rate`: 16000 recommended
+  - `microphone_device`: null for default, or device index from sounddevice
+  - `language`: null for auto-detect, or ISO code like "en", "es", "fr"
+  - `auto_start`: Windows registry auto-start at login
+  - `close_behavior`: "ask"/"minimize"/"quit" when closing settings
+
+### Microphone Error Handling
+
+**On Startup**:
+- Try to initialize audio stream with configured device
+- If fails: Show alert with device name and error details
+- App continues running (user can fix via Settings or tray menu)
+- Tray tooltip shows error state
+
+**On Config Change**:
+- Save previous working device as fallback
+- Try to initialize new device
+- If fails: Show alert with revert message
+- Revert config to fallback device
+- Reinitialize with fallback
+
+**Test Feature**:
+- Settings window has "Test Microphone" button
+- Creates short audio stream and validates it works
+- Shows success or error alert
+
+### System Tray Integration
+
+**Icon Handling**:
+- Source: `client/icons/app_icon.svg`
+- Converted to PNG at runtime using cairosvg
+- Fallback: Generated simple icon if SVG conversion fails
+
+**Context Menu**:
+- Settings (opens GUI, or minimizes from tray)
+- Model submenu: Radio buttons for all 5 model sizes
+- Microphone submenu: Dynamically populated from sounddevice.query_devices()
+- Exit
+
+**Threading**:
+- Tray icon runs in blocking event loop (main thread)
+- Keyboard listener runs in daemon background thread
+- GUI events (settings, config changes) run in separate threads
+- All config changes thread-safe (GIL prevents race conditions)
+
+### GUI Implementation
+
+**Settings Window** (`gui.py`):
+- Tkinter TTkNotebook with 3 tabs
+- Recording: Hotkey, microphone, language, test button
+- Model: Radio buttons with info display
+- General: Auto-start, close behavior, view logs
+
+**Alerts** (`alerts.py`):
+- Tkinter messageboxes for errors/warnings
+- Microphone-specific error messages for startup vs config change
+- Ask quit/minimize dialog with optional "remember choice"
+
+**Tray Manager** (`tray.py`):
+- pystray for cross-platform tray support
+- Regenerates menu on open to reflect current device list
+- Callbacks for menu items run in separate threads
 
 ## Common Development Patterns
 

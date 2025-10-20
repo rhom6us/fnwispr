@@ -8,11 +8,16 @@ fnwispr is a Windows speech-to-text tool that lets you dictate text in any appli
 
 - **Universal Text Input**: Works in any Windows application that accepts text
 - **Simple Hotkey**: Press and hold to record, release to transcribe
+- **System Tray Integration**: Runs silently in the system tray with easy access menu
+- **GUI Settings**: Graphical interface for all configuration options
+- **Quick Model Selection**: Change Whisper model size directly from tray menu
+- **Quick Microphone Selection**: Switch microphone devices from tray menu without opening settings
 - **Privacy-First**: All processing happens locally on your machine
 - **High Accuracy**: Powered by OpenAI's Whisper speech recognition
 - **Multi-Language**: Supports 99+ languages with automatic detection
-- **Configurable**: Choose your hotkey, model size, and language preferences
+- **Configurable**: Choose your hotkey, model size, language, and microphone via GUI
 - **No Internet Required**: Works completely offline once models are downloaded
+- **Windows Integration**: Auto-start at login, graceful error alerts for audio issues
 
 ## Architecture
 
@@ -63,20 +68,41 @@ fnwispr is a unified application that runs entirely on your Windows machine:
 
 ### Usage
 
-1. Start the application (see step 4 above)
-2. Open any application where you want to type (e.g., Notepad, Word, browser)
-3. Click to place your cursor where you want text inserted
-4. Press and hold **Ctrl+Win** (or your configured hotkey)
-5. Speak clearly into your microphone
-6. Release the hotkey when done speaking
-7. Wait a moment for transcription (depends on model size)
-8. Your spoken words appear as text at the cursor
+#### First Run
+When you run fnwispr for the first time, a settings window automatically opens. Configure your preferences:
+- **Recording**: Set your hotkey, select microphone, choose language
+- **Model**: Select Whisper model size (base recommended for most users)
+- **General**: Enable/disable auto-start at login, set close behavior
 
-**Press ESC to exit the application**
+#### Daily Usage
+1. Start the application - it minimizes to the system tray
+2. Look for the fnwispr icon in your system tray (bottom-right corner)
+3. **To use the hotkey**:
+   - Open any application where you want to type (e.g., Notepad, Word, browser)
+   - Click to place your cursor where you want text inserted
+   - Press and hold **Ctrl+Win** (or your configured hotkey)
+   - Speak clearly into your microphone
+   - Release the hotkey when done speaking
+   - Wait a moment for transcription (depends on model size)
+   - Your spoken words appear as text at the cursor
+
+#### Tray Menu
+Right-click the fnwispr icon in the system tray for quick access:
+- **Settings...** - Open full settings window (or double-click icon)
+- **Model >** - Change Whisper model size without opening settings
+- **Microphone >** - Switch microphone device without opening settings
+- **Exit** - Quit the application
+
+#### Troubleshooting
+- **Microphone not working?** Right-click tray icon → Microphone > and select a different device, or open Settings and click "Test Microphone"
+- **Wrong model selected?** Right-click tray icon → Model > and pick a different size
+- **Close to tray, quit, or ask?** Edit in Settings → General tab
+
+**Press ESC to exit the application (only while keyboard listener is active)**
 
 ## Configuration
 
-Edit `client/config.json` to customize fnwispr:
+Configuration is managed through the GUI (recommended) or by editing `~/.fnwispr/config.json`:
 
 ```json
 {
@@ -84,7 +110,9 @@ Edit `client/config.json` to customize fnwispr:
   "model": "base",
   "sample_rate": 16000,
   "microphone_device": null,
-  "language": null
+  "language": null,
+  "auto_start": false,
+  "close_behavior": "ask"
 }
 ```
 
@@ -92,11 +120,18 @@ Edit `client/config.json` to customize fnwispr:
 
 | Option | Description | Default | Options |
 |--------|-------------|---------|---------|
-| `hotkey` | Key combination to activate recording | `"ctrl+win"` | See "Hotkey Configuration" below |
-| `model` | Whisper model size | `"base"` | `tiny`, `base`, `small`, `medium`, `large` |
-| `sample_rate` | Audio sample rate | `16000` | 16000 recommended |
-| `microphone_device` | Microphone to use | `null` (default) | Device ID number |
-| `language` | Force specific language | `null` (auto-detect) | `"en"`, `"es"`, `"fr"`, etc. |
+| `hotkey` | Key combination to activate recording | `"ctrl+win"` | `"ctrl+alt"`, `"ctrl+win"`, `"ctrl_l+win"`, etc. |
+| `model` | Whisper model size | `"base"` | `"tiny"`, `"base"`, `"small"`, `"medium"`, `"large"` |
+| `sample_rate` | Audio sample rate | `16000` | `16000` recommended |
+| `microphone_device` | Microphone to use | `null` (default) | `null` for default, or device index number |
+| `language` | Force specific language | `null` (auto-detect) | `"en"`, `"es"`, `"fr"`, `"de"`, etc. |
+| `auto_start` | Start fnwispr at Windows login | `false` | `true` or `false` |
+| `close_behavior` | Action when closing settings window | `"ask"` | `"ask"`, `"minimize"` (to tray), `"quit"` |
+
+### Configuration File Location
+- **Windows**: `C:\Users\YourUsername\.fnwispr\config.json`
+- Configuration is automatically created on first run
+- If you have an old `client/config.json`, it's automatically migrated to the new location
 
 ### Hotkey Configuration
 
