@@ -546,7 +546,30 @@ class FnwisprClient:
                 on_config_change=self._on_config_change,
                 on_test_mic=self._test_microphone
             )
-            self.settings_window.create_window()
+            try:
+                self.settings_window.create_window()
+            except Exception as e:
+                logger.error(f"Cannot open settings window: {e}", exc_info=True)
+                self.alert_manager.show_warning(
+                    "Settings Window Unavailable",
+                    "The settings window requires Tcl/Tk which is not installed.\n\n"
+                    "HOW TO FIX:\n"
+                    "1. Uninstall Python from Control Panel\n"
+                    "2. Download Python from python.org\n"
+                    "3. Run the installer\n"
+                    "4. CHECK THE BOX: 'tcl/tk and IDLE'\n"
+                    "5. Complete installation\n"
+                    "6. Restart fnwispr\n\n"
+                    "ALTERNATIVE (without Tcl/Tk):\n"
+                    "• Edit config at: ~/.fnwispr/config.json\n"
+                    "• Use tray menu to change:\n"
+                    "  - Model (right-click → Model)\n"
+                    "  - Microphone (right-click → Microphone)\n"
+                    "• Hotkey still works normally"
+                )
+                self.settings_window = None
+                return
+
         self.settings_window.show()
 
     def _on_settings_close(self):
@@ -678,9 +701,13 @@ class FnwisprClient:
             get_current_device=lambda: self.config.get("microphone_device")
         )
 
-        # Show settings on first run
+        # Show settings on first run (but don't crash if Tkinter unavailable)
         if is_first_run:
-            self._on_tray_settings()
+            try:
+                self._on_tray_settings()
+            except Exception as e:
+                logger.warning(f"Could not show settings window on first run: {e}")
+                logger.info("Tcl/Tk may not be installed. Settings window will not be available.")
 
         # Start keyboard listener thread
         self.listener_thread = threading.Thread(target=self._keyboard_listener_thread, daemon=True)

@@ -46,7 +46,13 @@ class SettingsWindow:
 
     def create_window(self) -> tk.Tk:
         """Create and setup the settings window"""
-        self.window = tk.Tk()
+        try:
+            self.window = tk.Tk()
+        except Exception as e:
+            logger.error(f"Failed to create Tkinter window: {e}")
+            logger.error("Tcl/Tk may not be installed. Reinstall Python with Tcl/Tk support.")
+            raise
+
         self.window.title("fnwispr Settings")
         self.window.geometry("500x450")
         self.window.resizable(False, False)
