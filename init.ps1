@@ -21,7 +21,7 @@ Write-Host "================================================" -ForegroundColor C
 Write-Host ""
 
 # Check if Python is installed
-Write-Host "[1/4] Checking Python installation..." -ForegroundColor Yellow
+Write-Host "[1/3] Checking Python installation..." -ForegroundColor Yellow
 try {
     $pythonVersion = python --version 2>&1
     Write-Host "       Found: $pythonVersion" -ForegroundColor Green
@@ -33,7 +33,7 @@ try {
 Write-Host ""
 
 # Create virtual environment
-Write-Host "[2/4] Setting up virtual environment..." -ForegroundColor Yellow
+Write-Host "[2/3] Setting up virtual environment..." -ForegroundColor Yellow
 if (Test-Path "venv") {
     Write-Host "       Virtual environment already exists, skipping creation" -ForegroundColor Gray
 } else {
@@ -48,7 +48,7 @@ if (Test-Path "venv") {
 Write-Host ""
 
 # Activate virtual environment
-Write-Host "[3/4] Installing dependencies..." -ForegroundColor Yellow
+Write-Host "[3/3] Installing dependencies..." -ForegroundColor Yellow
 try {
     & ".\venv\Scripts\Activate.ps1"
     Write-Host "       Activated virtual environment" -ForegroundColor Green
@@ -65,19 +65,9 @@ python -m pip install --quiet --upgrade pip setuptools wheel
 Write-Host "       Installing client dependencies..." -ForegroundColor Gray
 try {
     pip install --quiet -r client\requirements.txt
-    Write-Host "       ✓ Client dependencies installed" -ForegroundColor Green
+    Write-Host "       ✓ fnwispr dependencies installed" -ForegroundColor Green
 } catch {
-    Write-Host "ERROR: Failed to install client dependencies" -ForegroundColor Red
-    exit 1
-}
-
-# Install server dependencies
-Write-Host "       Installing server dependencies..." -ForegroundColor Gray
-try {
-    pip install --quiet -r server\requirements.txt
-    Write-Host "       ✓ Server dependencies installed" -ForegroundColor Green
-} catch {
-    Write-Host "ERROR: Failed to install server dependencies" -ForegroundColor Red
+    Write-Host "ERROR: Failed to install dependencies" -ForegroundColor Red
     exit 1
 }
 
@@ -91,28 +81,6 @@ if (Test-Path "requirements-dev.txt") {
 }
 Write-Host ""
 
-# Create configuration files
-Write-Host "[4/4] Creating configuration files..." -ForegroundColor Yellow
-
-# Create client config from example
-if (-not (Test-Path "client\config.json")) {
-    if (Test-Path "client\config.example.json") {
-        Copy-Item "client\config.example.json" "client\config.json"
-        Write-Host "       Created client\config.json from example" -ForegroundColor Green
-    }
-} else {
-    Write-Host "       client\config.json already exists" -ForegroundColor Gray
-}
-
-# Create .env file from example
-if (-not (Test-Path ".env")) {
-    if (Test-Path ".env.example") {
-        Copy-Item ".env.example" ".env"
-        Write-Host "       Created .env from example" -ForegroundColor Green
-    }
-} else {
-    Write-Host "       .env already exists" -ForegroundColor Gray
-}
 Write-Host ""
 
 Write-Host "================================================" -ForegroundColor Cyan
@@ -121,23 +89,21 @@ Write-Host "================================================" -ForegroundColor C
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "1. Start the Whisper service:" -ForegroundColor White
-Write-Host "   docker-compose up -d" -ForegroundColor Gray
-Write-Host ""
-Write-Host "2. Run the client:" -ForegroundColor White
+Write-Host "1. Run fnwispr:" -ForegroundColor White
 Write-Host "   .\venv\Scripts\Activate.ps1" -ForegroundColor Gray
-Write-Host "   cd client" -ForegroundColor Gray
-Write-Host "   python main.py" -ForegroundColor Gray
+Write-Host "   python client/main.py" -ForegroundColor Gray
 Write-Host ""
-Write-Host "3. (Optional) Run tests:" -ForegroundColor White
+Write-Host "   Or in VS Code: Press F5 to debug" -ForegroundColor Gray
+Write-Host ""
+Write-Host "2. (Optional) Run tests:" -ForegroundColor White
 Write-Host "   .\venv\Scripts\Activate.ps1" -ForegroundColor Gray
-Write-Host "   pytest tests\ -v" -ForegroundColor Gray
+Write-Host "   pytest tests/ -v" -ForegroundColor Gray
 Write-Host ""
 Write-Host "Virtual environment activation command:" -ForegroundColor White
 Write-Host "   .\venv\Scripts\Activate.ps1" -ForegroundColor Gray
 Write-Host ""
 Write-Host "To verify installation:" -ForegroundColor White
-Write-Host '   python -c "import sounddevice; import fastapi; print(''All dependencies installed!'')"' -ForegroundColor Gray
+Write-Host '   python -c "import sounddevice; import whisper; print(''All dependencies installed!'')"' -ForegroundColor Gray
 Write-Host ""
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
