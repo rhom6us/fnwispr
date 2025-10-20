@@ -47,12 +47,13 @@ If using the DevContainer (for server-only development):
 
 ## Essential Extensions
 
-| Extension | Purpose | Required For |
-|-----------|---------|--------------|
-| ms-python.python | Python debugging & IntelliSense | **Required** |
-| ms-python.vscode-pylance | Advanced type checking | Recommended |
-| ms-python.black-formatter | Code formatting | Recommended |
-| ms-azuretools.vscode-docker | Docker support | Optional |
+| Extension | Purpose |
+|-----------|---------|
+| ms-python.python | Python debugging & IntelliSense (Required) |
+| ms-python.vscode-pylance | Advanced type checking & IntelliSense |
+| ms-python.black-formatter | Code formatting (matches project settings) |
+| ms-python.flake8 | Linting (matches project settings) |
+| ms-azuretools.vscode-docker | Docker container management |
 
 ## Troubleshooting
 

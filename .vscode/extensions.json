@@ -1,33 +1,12 @@
 {
   "recommendations": [
-    // Python
+    // Python - Required
     "ms-python.python",
     "ms-python.vscode-pylance",
     "ms-python.black-formatter",
     "ms-python.flake8",
 
-    // Docker
-    "ms-azuretools.vscode-docker",
-
-    // Git
-    "eamodio.gitlens",
-
-    // Testing
-    "littlefoxteam.vscode-python-test-adapter",
-
-    // Markdown
-    "yzhang.markdown-all-in-one",
-    "davidanson.vscode-markdownlint",
-
-    // YAML
-    "redhat.vscode-yaml",
-
-    // JSON
-    "tamasfe.even-better-toml",
-
-    // Utilities
-    "streetsidesoftware.code-spell-checker",
-    "gruntfuggly.todo-tree",
-    "aaron-bond.better-comments"
+    // Docker - Required for server development
+    "ms-azuretools.vscode-docker"
   ]
 }

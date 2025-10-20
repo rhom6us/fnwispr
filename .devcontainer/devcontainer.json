@@ -11,10 +11,6 @@
         "ms-python.vscode-pylance",
         "ms-python.black-formatter",
         "ms-python.flake8",
-        "charliermarsh.ruff",
-        "eamodio.gitlens",
-        "github.copilot",
-        "redhat.vscode-yaml",
         "ms-azuretools.vscode-docker"
       ],
       "settings": {
