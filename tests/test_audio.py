@@ -259,3 +259,97 @@ class TestAudioFormatHandling:
         finally:
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
+
+    def test_transcribe_audio_handles_int32(self, temp_config_file):
+        """Test transcription of int32 audio"""
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            temp_path = f.name
+
+        try:
+            # Create int32 audio and save
+            sample_rate = 16000
+            audio_int32 = np.array([100000, 200000, -100000], dtype=np.int32)
+            write_wav(temp_path, sample_rate, audio_int32)
+
+            with patch("whisper.load_model") as mock_load:
+                mock_model = MagicMock()
+                mock_model.transcribe = MagicMock(
+                    return_value={"text": "test", "language": "en"}
+                )
+                mock_load.return_value = mock_model
+
+                client = FnwisprClient(temp_config_file)
+                client.transcribe_audio(temp_path)
+
+                # Check that transcribe was called with float32 normalized data
+                call_args = mock_model.transcribe.call_args
+                audio_data = call_args[0][0]
+                assert audio_data.dtype == np.float32
+                assert audio_data.min() >= -1.0
+                assert audio_data.max() <= 1.0
+
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+    def test_transcribe_audio_handles_uint8(self, temp_config_file):
+        """Test transcription of uint8 audio"""
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            temp_path = f.name
+
+        try:
+            # Create uint8 audio and save
+            sample_rate = 16000
+            audio_uint8 = np.array([128, 200, 100], dtype=np.uint8)
+            write_wav(temp_path, sample_rate, audio_uint8)
+
+            with patch("whisper.load_model") as mock_load:
+                mock_model = MagicMock()
+                mock_model.transcribe = MagicMock(
+                    return_value={"text": "test", "language": "en"}
+                )
+                mock_load.return_value = mock_model
+
+                client = FnwisprClient(temp_config_file)
+                client.transcribe_audio(temp_path)
+
+                # Check that transcribe was called with float32 normalized data
+                call_args = mock_model.transcribe.call_args
+                audio_data = call_args[0][0]
+                assert audio_data.dtype == np.float32
+                assert audio_data.min() >= -1.0
+                assert audio_data.max() <= 1.0
+
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+    def test_transcribe_audio_already_float32(self, temp_config_file):
+        """Test that float32 audio is not re-normalized"""
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            temp_path = f.name
+
+        try:
+            # Create float32 audio
+            sample_rate = 16000
+            audio_float32 = np.array([0.1, 0.5, -0.3], dtype=np.float32)
+            write_wav(temp_path, sample_rate, audio_float32)
+
+            with patch("whisper.load_model") as mock_load:
+                mock_model = MagicMock()
+                mock_model.transcribe = MagicMock(
+                    return_value={"text": "test", "language": "en"}
+                )
+                mock_load.return_value = mock_model
+
+                client = FnwisprClient(temp_config_file)
+                client.transcribe_audio(temp_path)
+
+                # Check that transcribe was called with float32 data
+                call_args = mock_model.transcribe.call_args
+                audio_data = call_args[0][0]
+                assert audio_data.dtype == np.float32
+
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
