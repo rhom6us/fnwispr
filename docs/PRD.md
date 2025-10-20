@@ -57,8 +57,13 @@ fnwispr provides a lightweight, always-available hotkey-triggered speech recogni
   - Health monitoring
 
 #### 3.1.3 Development Environment
-- **Technology**: VS Code DevContainer
+- **Technology**: VS Code DevContainer, VS Code Tasks
 - **Purpose**: Consistent development environment across team members
+- **Features**:
+  - Pre-configured tasks for building, testing, and running
+  - Debug configurations for client, server, and full-stack
+  - Recommended extensions for Python, Docker, and Git
+  - Automated linting and formatting on save
 
 ### 3.2 Communication Flow
 ```
@@ -123,6 +128,26 @@ Transcribed Text → Text Insertion → Active Window
 - **FR-7.2**: Service SHALL be launchable via docker-compose
 - **FR-7.3**: Service SHALL persist model cache across container restarts
 - **FR-7.4**: Service SHALL support environment-based configuration
+
+### 4.3 Development Tools
+
+#### 4.3.1 VS Code Integration
+- **FR-8.1**: Project SHALL provide VS Code tasks for common operations
+- **FR-8.2**: Project SHALL provide debug configurations for client and server
+- **FR-8.3**: Project SHALL recommend essential VS Code extensions
+- **FR-8.4**: VS Code tasks SHALL include:
+  - Build tasks (Docker image, client package)
+  - Run tasks (start/stop services, run client/server)
+  - Test tasks (unit tests, integration tests, coverage)
+  - Utility tasks (health checks, logs, dependency installation)
+  - Lint/format tasks (Black, Flake8)
+  - Development workflow tasks (setup, rebuild)
+- **FR-8.5**: Debug configurations SHALL support:
+  - Client debugging with server health check
+  - Local server debugging (not in Docker)
+  - Attach to running Docker container
+  - Test debugging
+  - Full-stack debugging (client + server simultaneously)
 
 ---
 
@@ -344,6 +369,8 @@ WHISPER_MODEL=base  # Default model to load on startup
 - JSON configuration
 - Basic error handling
 - Documentation and README
+- VS Code tasks and debug configurations
+- DevContainer development environment
 
 ### 13.2 Version 1.1
 - GPU acceleration support

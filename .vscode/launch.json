@@ -1,0 +1,135 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    // Client Debugging
+    {
+      "name": "Debug: Client",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/client/main.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/client",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "justMyCode": true,
+      "preLaunchTask": "Run: Check Server Health"
+    },
+    {
+      "name": "Debug: Client (No Server Check)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/client/main.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/client",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "justMyCode": true
+    },
+
+    // Server Debugging (Local - not in Docker)
+    {
+      "name": "Debug: Server (Local)",
+      "type": "python",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "main:app",
+        "--reload",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/server",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "WHISPER_MODEL": "base"
+      },
+      "justMyCode": true
+    },
+    {
+      "name": "Debug: Server (Local - Tiny Model)",
+      "type": "python",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "main:app",
+        "--reload",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/server",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "WHISPER_MODEL": "tiny"
+      },
+      "justMyCode": true
+    },
+
+    // Attach to running Docker container
+    {
+      "name": "Debug: Attach to Docker Server",
+      "type": "python",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/server",
+          "remoteRoot": "/app"
+        }
+      ]
+    },
+
+    // Python Testing
+    {
+      "name": "Debug: Current Test File",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "${file}",
+        "-v",
+        "-s"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Debug: All Tests",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "tests/",
+        "-v",
+        "-s"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug: Full Stack (Client + Server)",
+      "configurations": [
+        "Debug: Server (Local)",
+        "Debug: Client"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "full-stack",
+        "order": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,345 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // Build Tasks
+    {
+      "label": "Build: Docker Server",
+      "type": "shell",
+      "command": "docker-compose",
+      "args": ["build", "whisper-service"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Build: All Docker Services",
+      "type": "shell",
+      "command": "docker-compose",
+      "args": ["build"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Build: Client Package",
+      "type": "shell",
+      "command": "pip",
+      "args": ["install", "-e", "client/"],
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+
+    // Run/Start Tasks
+    {
+      "label": "Run: Start Whisper Service",
+      "type": "shell",
+      "command": "docker-compose",
+      "args": ["up", "-d", "whisper-service"],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Run: Start All Services",
+      "type": "shell",
+      "command": "docker-compose",
+      "args": ["up", "-d"],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Run: Stop All Services",
+      "type": "shell",
+      "command": "docker-compose",
+      "args": ["down"],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Run: Client",
+      "type": "shell",
+      "command": "python",
+      "args": ["client/main.py"],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "dependsOn": ["Run: Check Server Health"]
+    },
+    {
+      "label": "Run: Server (Local)",
+      "type": "shell",
+      "command": "python",
+      "args": ["server/main.py"],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+
+    // Test Tasks
+    {
+      "label": "Test: Server Unit Tests",
+      "type": "shell",
+      "command": "pytest",
+      "args": ["tests/server", "-v"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Test: Client Unit Tests",
+      "type": "shell",
+      "command": "pytest",
+      "args": ["tests/client", "-v"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Test: All Tests",
+      "type": "shell",
+      "command": "pytest",
+      "args": ["tests/", "-v"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Test: Coverage Report",
+      "type": "shell",
+      "command": "pytest",
+      "args": ["tests/", "--cov=server", "--cov=client", "--cov-report=html"],
+      "problemMatcher": [],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+
+    // Utility Tasks
+    {
+      "label": "Utility: Check Server Health",
+      "type": "shell",
+      "command": "curl",
+      "args": ["-f", "http://localhost:8000/health"],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Run: Check Server Health",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "echo 'Checking server health...' && curl -f http://localhost:8000/health || echo 'Server not running. Please start with: docker-compose up -d'"
+      ],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Utility: View Server Logs",
+      "type": "shell",
+      "command": "docker-compose",
+      "args": ["logs", "-f", "whisper-service"],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Utility: View Client Logs",
+      "type": "shell",
+      "command": "tail",
+      "args": ["-f", "client/fnwispr_client.log"],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Utility: Install Client Dependencies",
+      "type": "shell",
+      "command": "pip",
+      "args": ["install", "-r", "client/requirements.txt"],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Utility: Install Server Dependencies",
+      "type": "shell",
+      "command": "pip",
+      "args": ["install", "-r", "server/requirements.txt"],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Utility: Clean Docker",
+      "type": "shell",
+      "command": "docker-compose",
+      "args": ["down", "-v", "--remove-orphans"],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Utility: List Available Models",
+      "type": "shell",
+      "command": "curl",
+      "args": ["http://localhost:8000/models"],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+
+    // Linting/Formatting Tasks
+    {
+      "label": "Lint: Black (Format)",
+      "type": "shell",
+      "command": "black",
+      "args": ["client/", "server/"],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Lint: Flake8",
+      "type": "shell",
+      "command": "flake8",
+      "args": ["client/", "server/"],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Lint: All",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "echo 'Running Black...' && black client/ server/ && echo 'Running Flake8...' && flake8 client/ server/"
+      ],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+
+    // Development Workflow Tasks
+    {
+      "label": "Dev: Setup Project",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "pip install -r client/requirements.txt && pip install -r server/requirements.txt && docker-compose build && echo 'Setup complete!'"
+      ],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Dev: Rebuild and Restart",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "docker-compose down && docker-compose build && docker-compose up -d"
+      ],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "dependsOrder": "sequence"
+    }
+  ]
+}
