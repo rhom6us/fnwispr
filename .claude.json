@@ -1,0 +1,6 @@
+{
+  "project": {
+    "name": "fnwispr",
+    "description": "Speech-to-text tool for Windows using hotkeys and OpenAI Whisper"
+  }
+}
