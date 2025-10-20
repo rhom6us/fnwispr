@@ -90,5 +90,7 @@
   "[markdown]": {
     "editor.formatOnSave": false,
     "editor.wordWrap": "on"
-  }
+  },
+  "containers.containerCommand": "docker",
+  "containers.composeCommand": "docker-compose"
 }
