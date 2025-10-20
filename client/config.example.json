@@ -1,7 +1,6 @@
 {
   "hotkey": "ctrl+win",
   "_comment_hotkey": "Supported: 'ctrl+win', 'ctrl+alt', 'ctrl_l+win' (left ctrl only), 'alt_r+shift' (right alt + any shift), etc.",
-  "server_url": "http://localhost:8000",
   "model": "base",
   "sample_rate": 16000,
   "microphone_device": null,

@@ -3,25 +3,10 @@
   "tasks": [
     // Build Tasks
     {
-      "label": "Build: Docker Server",
+      "label": "Build: Install Dependencies",
       "type": "shell",
-      "command": "docker-compose",
-      "args": ["build", "whisper-service"],
-      "problemMatcher": [],
-      "group": {
-        "kind": "build",
-        "isDefault": false
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
-    {
-      "label": "Build: All Docker Services",
-      "type": "shell",
-      "command": "docker-compose",
-      "args": ["build"],
+      "command": "${workspaceFolder}/venv/Scripts/pip.exe",
+      "args": ["install", "-r", "client/requirements.txt"],
       "problemMatcher": [],
       "group": {
         "kind": "build",
@@ -33,10 +18,10 @@
       }
     },
     {
-      "label": "Build: Client Package",
+      "label": "Build: Update All Dependencies",
       "type": "shell",
       "command": "${workspaceFolder}/venv/Scripts/pip.exe",
-      "args": ["install", "-e", "client/"],
+      "args": ["install", "--upgrade", "-r", "client/requirements.txt"],
       "problemMatcher": [],
       "group": "build",
       "presentation": {
@@ -47,43 +32,7 @@
 
     // Run/Start Tasks
     {
-      "label": "Run: Start Whisper Service",
-      "type": "shell",
-      "command": "docker-compose",
-      "args": ["up", "-d", "whisper-service"],
-      "problemMatcher": [],
-      "group": "none",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
-    {
-      "label": "Run: Start All Services",
-      "type": "shell",
-      "command": "docker-compose",
-      "args": ["up", "-d"],
-      "problemMatcher": [],
-      "group": "none",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
-    {
-      "label": "Run: Stop All Services",
-      "type": "shell",
-      "command": "docker-compose",
-      "args": ["down"],
-      "problemMatcher": [],
-      "group": "none",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
-    {
-      "label": "Run: Client",
+      "label": "Run: fnwispr",
       "type": "shell",
       "command": "${workspaceFolder}/venv/Scripts/python.exe",
       "args": ["client/main.py"],
@@ -92,51 +41,13 @@
       "presentation": {
         "reveal": "always",
         "panel": "new"
-      },
-      "dependsOn": ["Run: Check Server Health"]
-    },
-    {
-      "label": "Run: Server (Local)",
-      "type": "shell",
-      "command": "${workspaceFolder}/venv/Scripts/python.exe",
-      "args": ["server/main.py"],
-      "problemMatcher": [],
-      "group": "none",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
       }
     },
     {
-      "label": "Run (No Debug): Client",
+      "label": "Run (No Debug): fnwispr",
       "type": "shell",
       "command": "${workspaceFolder}/venv/Scripts/python.exe",
       "args": ["client/main.py"],
-      "problemMatcher": [],
-      "group": "run",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      },
-      "dependsOn": ["Run: Check Server Health"]
-    },
-    {
-      "label": "Run (No Debug): Server (Local)",
-      "type": "shell",
-      "command": "${workspaceFolder}/venv/Scripts/python.exe",
-      "args": ["server/main.py"],
-      "problemMatcher": [],
-      "group": "run",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
-    {
-      "label": "Run (No Debug): Server in Docker",
-      "type": "shell",
-      "command": "docker-compose",
-      "args": ["up", "whisper-service"],
       "problemMatcher": [],
       "group": "run",
       "presentation": {
@@ -146,36 +57,6 @@
     },
 
     // Test Tasks
-    {
-      "label": "Test: Server Unit Tests",
-      "type": "shell",
-      "command": "${workspaceFolder}/venv/Scripts/pytest.exe",
-      "args": ["tests/server", "-v"],
-      "problemMatcher": [],
-      "group": {
-        "kind": "test",
-        "isDefault": false
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
-    {
-      "label": "Test: Client Unit Tests",
-      "type": "shell",
-      "command": "${workspaceFolder}/venv/Scripts/pytest.exe",
-      "args": ["tests/client", "-v"],
-      "problemMatcher": [],
-      "group": {
-        "kind": "test",
-        "isDefault": false
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
     {
       "label": "Test: All Tests",
       "type": "shell",
@@ -195,7 +76,7 @@
       "label": "Test: Coverage Report",
       "type": "shell",
       "command": "${workspaceFolder}/venv/Scripts/pytest.exe",
-      "args": ["tests/", "--cov=server", "--cov=client", "--cov-report=html"],
+      "args": ["tests/", "--cov=client", "--cov-report=html"],
       "problemMatcher": [],
       "group": "test",
       "presentation": {
@@ -206,98 +87,30 @@
 
     // Utility Tasks
     {
-      "label": "Utility: Check Server Health",
-      "type": "shell",
-      "command": "curl",
-      "args": ["-f", "http://localhost:8000/health"],
-      "problemMatcher": [],
-      "group": "none",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
-    {
-      "label": "Run: Check Server Health",
+      "label": "Utility: View Application Logs",
       "type": "shell",
       "command": "powershell",
       "args": [
         "-NoProfile",
         "-Command",
-        "& { Write-Host 'Checking server health...' -ForegroundColor Cyan; try { Invoke-WebRequest -Uri 'http://localhost:8000/health' -ErrorAction Stop | Out-Null; Write-Host 'Server is healthy!' -ForegroundColor Green } catch { Write-Host 'Server not running. Please start with: docker-compose up -d' -ForegroundColor Red } }"
+        "& { if (Test-Path fnwispr_client.log) { Get-Content fnwispr_client.log -Tail 50 -Wait } else { Write-Host 'Log file not found. Run the app first.' -ForegroundColor Yellow } }"
       ],
       "problemMatcher": [],
       "group": "none",
       "presentation": {
-        "reveal": "silent",
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Utility: View Server Logs",
-      "type": "shell",
-      "command": "docker-compose",
-      "args": ["logs", "-f", "whisper-service"],
-      "problemMatcher": [],
-      "group": "none",
-      "presentation": {
         "reveal": "always",
         "panel": "new"
       }
     },
     {
-      "label": "Utility: View Client Logs",
+      "label": "Utility: Clean Logs",
       "type": "shell",
-      "command": "tail",
-      "args": ["-f", "client/fnwispr_client.log"],
-      "problemMatcher": [],
-      "group": "none",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
-    {
-      "label": "Utility: Install Client Dependencies",
-      "type": "shell",
-      "command": "${workspaceFolder}/venv/Scripts/pip.exe",
-      "args": ["install", "-r", "client/requirements.txt"],
-      "problemMatcher": [],
-      "group": "none",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
-    {
-      "label": "Utility: Install Server Dependencies",
-      "type": "shell",
-      "command": "${workspaceFolder}/venv/Scripts/pip.exe",
-      "args": ["install", "-r", "server/requirements.txt"],
-      "problemMatcher": [],
-      "group": "none",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
-    {
-      "label": "Utility: Clean Docker",
-      "type": "shell",
-      "command": "docker-compose",
-      "args": ["down", "-v", "--remove-orphans"],
-      "problemMatcher": [],
-      "group": "none",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
-    {
-      "label": "Utility: List Available Models",
-      "type": "shell",
-      "command": "curl",
-      "args": ["http://localhost:8000/models"],
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "& { if (Test-Path fnwispr_client.log) { Remove-Item fnwispr_client.log; Write-Host 'Logs cleared' -ForegroundColor Green } }"
+      ],
       "problemMatcher": [],
       "group": "none",
       "presentation": {
@@ -311,7 +124,7 @@
       "label": "Lint: Black (Format)",
       "type": "shell",
       "command": "${workspaceFolder}/venv/Scripts/black.exe",
-      "args": ["client/", "server/"],
+      "args": ["client/"],
       "problemMatcher": [],
       "group": "none",
       "presentation": {
@@ -323,7 +136,7 @@
       "label": "Lint: Flake8",
       "type": "shell",
       "command": "${workspaceFolder}/venv/Scripts/flake8.exe",
-      "args": ["client/", "server/"],
+      "args": ["client/"],
       "problemMatcher": [],
       "group": "none",
       "presentation": {
@@ -338,7 +151,7 @@
       "args": [
         "-NoProfile",
         "-Command",
-        "& { Write-Host 'Running Black...' -ForegroundColor Cyan; & '${workspaceFolder}/venv/Scripts/black.exe' client/ server/; Write-Host 'Running Flake8...' -ForegroundColor Cyan; & '${workspaceFolder}/venv/Scripts/flake8.exe' client/ server/ }"
+        "& { Write-Host 'Running Black...' -ForegroundColor Cyan; & '${workspaceFolder}/venv/Scripts/black.exe' client/; Write-Host 'Running Flake8...' -ForegroundColor Cyan; & '${workspaceFolder}/venv/Scripts/flake8.exe' client/ }"
       ],
       "problemMatcher": [],
       "group": "none",
@@ -361,39 +174,6 @@
         "panel": "new"
       },
       "isBackground": false
-    },
-    {
-      "label": "Dev: Setup Project",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-Command",
-        "& { & '${workspaceFolder}/venv/Scripts/pip.exe' install -r client/requirements.txt; & '${workspaceFolder}/venv/Scripts/pip.exe' install -r server/requirements.txt; docker-compose build; Write-Host 'Setup complete!' -ForegroundColor Green }"
-      ],
-      "problemMatcher": [],
-      "group": "none",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
-    {
-      "label": "Dev: Rebuild and Restart",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-Command",
-        "& { docker-compose down; docker-compose build; docker-compose up -d }"
-      ],
-      "problemMatcher": [],
-      "group": "none",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      },
-      "dependsOrder": "sequence"
     }
   ]
 }

@@ -1,6 +1,6 @@
 """
-fnwispr Client - Windows Speech-to-Text Hotkey Application
-Captures audio when hotkey is pressed and inserts transcribed text
+fnwispr - Windows Speech-to-Text Hotkey Application
+Captures audio when hotkey is pressed and inserts transcribed text using local Whisper
 """
 
 import json
@@ -14,8 +14,8 @@ from typing import Optional
 
 import numpy as np
 import pyautogui
-import requests
 import sounddevice as sd
+import whisper
 from pynput import keyboard
 from scipy.io.wavfile import write as write_wav
 
@@ -53,8 +53,16 @@ class FnwisprClient:
         # Parse hotkey combination
         self.hotkey_combo = self.parse_hotkey(self.config.get("hotkey", "ctrl+win"))
         logger.info(f"Hotkey combination: {self.config.get('hotkey', 'ctrl+win')}")
-        logger.info(f"Server URL: {self.config.get('server_url')}")
-        logger.info(f"Whisper model: {self.config.get('model', 'base')}")
+
+        # Load Whisper model
+        model_name = self.config.get("model", "base")
+        logger.info(f"Loading Whisper model: {model_name}")
+        try:
+            self.whisper_model = whisper.load_model(model_name)
+            logger.info(f"Whisper model '{model_name}' loaded successfully")
+        except Exception as e:
+            logger.error(f"Failed to load Whisper model '{model_name}': {e}")
+            raise
 
     def load_config(self, config_path: str) -> dict:
         """
@@ -265,7 +273,7 @@ class FnwisprClient:
 
     def transcribe_audio(self, audio_path: str) -> Optional[str]:
         """
-        Send audio to server for transcription
+        Transcribe audio file using local Whisper model
 
         Args:
             audio_path: Path to audio file
@@ -274,35 +282,24 @@ class FnwisprClient:
             Transcribed text or None if failed
         """
         try:
-            server_url = self.config.get("server_url")
-            model = self.config.get("model", "base")
             language = self.config.get("language")
 
-            url = f"{server_url}/transcribe"
+            # Build transcribe options
+            transcribe_options = {}
+            if language:
+                transcribe_options["language"] = language
 
-            with open(audio_path, 'rb') as audio_file:
-                files = {'audio': audio_file}
-                data = {'model_name': model}
-                if language:
-                    data['language'] = language
+            logger.info(f"Transcribing audio file: {audio_path}")
+            result = self.whisper_model.transcribe(audio_path, **transcribe_options)
 
-                logger.info(f"Sending audio to {url} with model={model}")
-                response = requests.post(url, files=files, data=data, timeout=60)
+            transcribed_text = result.get("text", "").strip()
+            detected_language = result.get("language")
 
-            if response.status_code == 200:
-                result = response.json()
-                text = result.get('text', '')
-                detected_language = result.get('language')
-                logger.info(f"Transcription successful. Language: {detected_language}")
-                logger.info(f"Transcribed text: {text}")
-                return text
-            else:
-                logger.error(f"Transcription failed with status {response.status_code}: {response.text}")
-                return None
+            logger.info(f"Transcription successful. Language: {detected_language}")
+            logger.info(f"Transcribed text: {transcribed_text}")
 
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to connect to server: {e}")
-            return None
+            return transcribed_text
+
         except Exception as e:
             logger.error(f"Transcription error: {e}")
             return None
@@ -375,46 +372,19 @@ class FnwisprClient:
 
     def run(self):
         """Run the client"""
-        logger.info("fnwispr client starting...")
+        logger.info("fnwispr starting...")
         logger.info(f"Press and hold {self.config.get('hotkey', 'ctrl+win')} to record")
         logger.info("Press ESC to exit")
-
-        # Check server connectivity
-        if not self.check_server():
-            logger.error("Cannot connect to server. Please ensure the server is running.")
-            logger.error(f"Server URL: {self.config.get('server_url')}")
-            return
 
         # Start keyboard listener
         with keyboard.Listener(
             on_press=self.on_press,
             on_release=self.on_release
         ) as listener:
-            logger.info("Keyboard listener started")
+            logger.info("Keyboard listener started. Ready to record!")
             listener.join()
 
-        logger.info("fnwispr client stopped")
-
-    def check_server(self) -> bool:
-        """
-        Check if server is accessible
-
-        Returns:
-            True if server is accessible, False otherwise
-        """
-        try:
-            server_url = self.config.get("server_url")
-            response = requests.get(f"{server_url}/health", timeout=5)
-            if response.status_code == 200:
-                logger.info("Server is accessible")
-                return True
-            else:
-                logger.warning(f"Server returned status {response.status_code}")
-                return False
-        except Exception as e:
-            logger.error(f"Server check failed: {e}")
-            return False
-
+        logger.info("fnwispr stopped")
 
 def main():
     """Main entry point"""

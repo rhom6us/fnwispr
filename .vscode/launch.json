@@ -1,96 +1,19 @@
 {
   "version": "0.2.0",
   "configurations": [
-    // Client Debugging
+    // Main Application Debugging
     {
-      "name": "Debug: Client",
+      "name": "Debug: fnwispr",
       "type": "debugpy",
       "request": "launch",
       "python": "${workspaceFolder}/venv/Scripts/python.exe",
       "program": "${workspaceFolder}/client/main.py",
       "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}/client",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}"
-      },
-      "justMyCode": true,
-      "preLaunchTask": "Run: Check Server Health"
-    },
-    {
-      "name": "Debug: Client (No Server Check)",
-      "type": "debugpy",
-      "request": "launch",
-      "python": "${workspaceFolder}/venv/Scripts/python.exe",
-      "program": "${workspaceFolder}/client/main.py",
-      "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}/client",
+      "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
       },
       "justMyCode": true
-    },
-
-    // Server Debugging (Local - not in Docker)
-    {
-      "name": "Debug: Server (Local)",
-      "type": "debugpy",
-      "request": "launch",
-      "python": "${workspaceFolder}/venv/Scripts/python.exe",
-      "module": "uvicorn",
-      "args": [
-        "main:app",
-        "--reload",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000"
-      ],
-      "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}/server",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}",
-        "WHISPER_MODEL": "base"
-      },
-      "justMyCode": true
-    },
-    {
-      "name": "Debug: Server (Local - Tiny Model)",
-      "type": "debugpy",
-      "request": "launch",
-      "python": "${workspaceFolder}/venv/Scripts/python.exe",
-      "module": "uvicorn",
-      "args": [
-        "main:app",
-        "--reload",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000"
-      ],
-      "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}/server",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}",
-        "WHISPER_MODEL": "tiny"
-      },
-      "justMyCode": true
-    },
-
-    // Attach to running Docker container
-    {
-      "name": "Debug: Attach to Docker Server",
-      "type": "debugpy",
-      "request": "attach",
-      "connect": {
-        "host": "localhost",
-        "port": 5678
-      },
-      "pathMappings": [
-        {
-          "localRoot": "${workspaceFolder}/server",
-          "remoteRoot": "/app"
-        }
-      ]
     },
 
     // Python Testing
@@ -121,21 +44,6 @@
       ],
       "console": "integratedTerminal",
       "justMyCode": false
-    }
-  ],
-  "compounds": [
-    {
-      "name": "Debug: Full Stack (Client + Server)",
-      "configurations": [
-        "Debug: Server (Local)",
-        "Debug: Client"
-      ],
-      "stopAll": true,
-      "presentation": {
-        "hidden": false,
-        "group": "full-stack",
-        "order": 1
-      }
     }
   ]
 }

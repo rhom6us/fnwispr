@@ -2,13 +2,13 @@
 
 > Speech-to-text anywhere on Windows with a hotkey
 
-fnwispr is a Windows speech-to-text tool that lets you dictate text in any application using a simple hotkey. Press and hold Ctrl+Alt (configurable), speak, release, and your words appear as text - powered by OpenAI's Whisper running locally in Docker.
+fnwispr is a Windows speech-to-text tool that lets you dictate text in any application using a simple hotkey. Press and hold Ctrl+Win (configurable), speak, release, and your words appear as text - powered by OpenAI's Whisper running locally on your machine.
 
 ## Features
 
 - **Universal Text Input**: Works in any Windows application that accepts text
 - **Simple Hotkey**: Press and hold to record, release to transcribe
-- **Privacy-First**: All processing happens locally using Docker
+- **Privacy-First**: All processing happens locally on your machine
 - **High Accuracy**: Powered by OpenAI's Whisper speech recognition
 - **Multi-Language**: Supports 99+ languages with automatic detection
 - **Configurable**: Choose your hotkey, model size, and language preferences
@@ -16,17 +16,18 @@ fnwispr is a Windows speech-to-text tool that lets you dictate text in any appli
 
 ## Architecture
 
-fnwispr uses a hybrid architecture:
-- **Windows Client** (Python): Handles hotkeys, audio recording, and text insertion
-- **Whisper Service** (Docker): Provides speech recognition API
-- **Communication**: Local HTTP REST API
+fnwispr is a unified application that runs entirely on your Windows machine:
+- **Hotkey Detection**: Uses `pynput` to detect global keyboard shortcuts
+- **Audio Recording**: Captures audio from your microphone using `sounddevice`
+- **Speech Recognition**: Uses OpenAI's Whisper model loaded locally
+- **Text Insertion**: Simulates keyboard input with `pyautogui`
+- **No External Services**: Everything runs on your machine
 
 ## Quick Start
 
 ### Prerequisites
 
 - Windows 10 or 11
-- [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
 - Python 3.8 or higher
 - A working microphone
 
@@ -38,43 +39,40 @@ fnwispr uses a hybrid architecture:
    cd fnwispr
    ```
 
-2. **Start the Whisper service**
-   ```bash
-   docker-compose up -d
+2. **Initialize the development environment**
+   ```powershell
+   .\init.ps1
    ```
 
-   This will download the Whisper model and start the service. First run may take a few minutes.
+   This creates a virtual environment and installs all dependencies. First run may take a few minutes to download the Whisper model.
 
-3. **Install client dependencies**
+3. **Create configuration file** (optional)
    ```bash
-   cd client
-   pip install -r requirements.txt
+   copy client/config.example.json client/config.json
    ```
 
-4. **Create configuration file**
+   Edit `client/config.json` if you want to change the hotkey or other settings.
+
+4. **Run the application**
    ```bash
-   copy config.example.json config.json
+   .\venv\Scripts\Activate.ps1
+   python client/main.py
    ```
 
-   Edit `config.json` if you want to change the hotkey or other settings.
-
-5. **Run the client**
-   ```bash
-   python main.py
-   ```
+   Or in VS Code: Press `F5` to debug
 
 ### Usage
 
-1. Start the client application (see step 5 above)
+1. Start the application (see step 4 above)
 2. Open any application where you want to type (e.g., Notepad, Word, browser)
 3. Click to place your cursor where you want text inserted
-4. Press and hold **Ctrl+Alt** (or your configured hotkey)
+4. Press and hold **Ctrl+Win** (or your configured hotkey)
 5. Speak clearly into your microphone
 6. Release the hotkey when done speaking
-7. Wait a moment for transcription
+7. Wait a moment for transcription (depends on model size)
 8. Your spoken words appear as text at the cursor
 
-**Press ESC to exit the client**
+**Press ESC to exit the application**
 
 ## Configuration
 
@@ -83,7 +81,6 @@ Edit `client/config.json` to customize fnwispr:
 ```json
 {
   "hotkey": "ctrl+win",
-  "server_url": "http://localhost:8000",
   "model": "base",
   "sample_rate": 16000,
   "microphone_device": null,
@@ -96,7 +93,6 @@ Edit `client/config.json` to customize fnwispr:
 | Option | Description | Default | Options |
 |--------|-------------|---------|---------|
 | `hotkey` | Key combination to activate recording | `"ctrl+win"` | See "Hotkey Configuration" below |
-| `server_url` | Whisper service URL | `"http://localhost:8000"` | Any valid URL |
 | `model` | Whisper model size | `"base"` | `tiny`, `base`, `small`, `medium`, `large` |
 | `sample_rate` | Audio sample rate | `16000` | 16000 recommended |
 | `microphone_device` | Microphone to use | `null` (default) | Device ID number |
@@ -157,17 +153,6 @@ Look for your microphone in the output and note its device ID number. Add it to 
 
 ## Troubleshooting
 
-### Client can't connect to server
-
-**Problem**: Error message: "Cannot connect to server"
-
-**Solutions**:
-1. Make sure Docker Desktop is running
-2. Check the service is running: `docker-compose ps`
-3. If not running: `docker-compose up -d`
-4. Check logs: `docker-compose logs whisper-service`
-5. Verify service is healthy: visit http://localhost:8000/health in browser
-
 ### No audio being recorded
 
 **Problem**: Transcription returns empty or no text appears
@@ -208,37 +193,32 @@ Look for your microphone in the output and note its device ID number. Add it to 
 
 ## Development
 
-### Local Development (Recommended for Client)
-
-Since the **client must run on Windows** (requires system hotkeys, audio, and keyboard access), you'll typically develop locally:
+### Local Development Setup
 
 1. **Install VS Code Extensions**
    - Press `Ctrl+Shift+X` to open Extensions
    - Install recommended extensions (especially **Python** by Microsoft)
    - Or click "Install All" when VS Code prompts for workspace recommendations
 
-2. **Setup Python Environment**
-   ```bash
-   # Install dependencies
-   pip install -r client/requirements.txt
-   pip install -r server/requirements.txt
+2. **Initialize Environment**
+   ```powershell
+   .\init.ps1
    ```
+   This creates a virtual environment and installs all dependencies.
 
 3. **Start Development**
-   - Press `F5` to debug client or server
-   - Press `Ctrl+Shift+P` → "Tasks: Run Task" to run tasks
+   - Press `F5` to debug the application
+   - Press `Ctrl+Shift+P` → "Tasks: Run Task" to run development tasks
    - See `.vscode/SETUP.md` for detailed VS Code configuration
 
-### Using DevContainer (Server Development Only)
+### Available Development Tasks
 
-For server-only development, you can use the DevContainer:
-
-1. Install [VS Code](https://code.visualstudio.com/) and [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-2. Open the project in VS Code
-3. Click "Reopen in Container" when prompted
-4. Extensions install automatically; server dependencies are pre-installed
-
-**Note**: The client cannot run in the DevContainer (needs Windows host access)
+- `Dev: Initialize Environment` - Setup venv and install dependencies
+- `Build: Install Dependencies` - Install/reinstall packages
+- `Run: fnwispr` - Run the application
+- `Test: All Tests` - Run test suite
+- `Lint: All` - Format and lint code
+- `Utility: View Application Logs` - Monitor live logs
 
 ### Running Tests
 
@@ -251,60 +231,46 @@ pytest
 
 ```
 fnwispr/
-├── client/              # Windows client application
-│   ├── main.py         # Main client application
+├── client/              # Main application
+│   ├── main.py         # Application entry point with hotkey, audio, and Whisper
 │   ├── config.example.json  # Example configuration
-│   ├── requirements.txt
-│   └── setup.py
-├── server/              # Whisper service
-│   ├── main.py         # FastAPI server
-│   ├── Dockerfile
-│   └── requirements.txt
-├── .devcontainer/       # Development container config
-│   ├── devcontainer.json
-│   └── Dockerfile
+│   └── requirements.txt  # Dependencies
+├── tests/               # Test suite
 ├── docs/                # Documentation
 │   └── PRD.md          # Product Requirements Document
-├── docker-compose.yml   # Production compose file
-├── docker-compose.dev.yml  # Development compose file
-├── .env.example         # Environment variables example
+├── .vscode/             # VS Code configuration
+│   ├── tasks.json      # Development tasks
+│   ├── launch.json     # Debug configurations
+│   └── SETUP.md        # Setup guide
+├── init.ps1            # Development environment initialization
+├── requirements-dev.txt # Development tools
 ├── .gitignore
 └── README.md
 ```
 
-## API Documentation
-
-When the Whisper service is running, visit http://localhost:8000/docs for interactive API documentation.
-
-### Key Endpoints
-
-- `POST /transcribe` - Transcribe audio file to text
-- `GET /health` - Health check
-- `GET /models` - List available models
-- `GET /` - API information
-
 ## How It Works
 
-1. **Hotkey Detection**: The client uses `pynput` to detect when your configured hotkey combination is pressed
-2. **Audio Recording**: While the hotkey is held, `sounddevice` captures audio from your microphone
-3. **Audio Processing**: When released, the audio is saved as a temporary WAV file
-4. **Transcription**: The audio file is sent to the local Whisper service via HTTP POST
-5. **Speech Recognition**: Whisper processes the audio and returns transcribed text
-6. **Text Insertion**: The client uses `pyautogui` to type the text at the current cursor position
+1. **Startup**: Application loads your configured Whisper model on startup (may take a moment)
+2. **Hotkey Detection**: Uses `pynput` to detect when your configured hotkey combination is pressed
+3. **Audio Recording**: While the hotkey is held, `sounddevice` captures audio from your microphone
+4. **Audio Processing**: When released, the audio is saved as a temporary WAV file (16kHz, mono)
+5. **Transcription**: The Whisper model processes the audio locally
+6. **Text Insertion**: Uses `pyautogui` to type the transcribed text at the current cursor position
+7. **Cleanup**: Temporary audio file is deleted
 
 ## Privacy & Security
 
 - **Local Processing**: All audio processing happens on your computer
 - **No Cloud**: No data is sent to external servers
 - **Temporary Files**: Audio recordings are deleted immediately after transcription
-- **Isolated Service**: Whisper runs in an isolated Docker container
+- **No External Services**: Everything runs locally on your machine
 
 ## Limitations
 
-- **Windows Only**: Client currently only supports Windows (service is cross-platform)
+- **Windows Only**: Application currently only supports Windows
 - **Press-to-Transcribe**: No real-time streaming (must finish speaking before transcription)
 - **Single Speaker**: Optimized for single-speaker dictation
-- **Requires Docker**: Service requires Docker Desktop (licensing considerations for enterprise)
+- **First-Time Load**: Model download and initialization on first run can take a few minutes
 
 ## Roadmap
 
@@ -334,9 +300,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Acknowledgments
 
 - [OpenAI Whisper](https://github.com/openai/whisper) - The amazing speech recognition model
-- [FastAPI](https://fastapi.tiangolo.com/) - Modern web framework for the API
-- [pynput](https://github.com/moses-palmer/pynput) - Keyboard and mouse control
+- [pynput](https://github.com/moses-palmer/pynput) - Keyboard hotkey detection
 - [sounddevice](https://python-sounddevice.readthedocs.io/) - Audio recording
+- [pyautogui](https://pyautogui.readthedocs.io/) - Keyboard automation for text input
 
 ## Support
 

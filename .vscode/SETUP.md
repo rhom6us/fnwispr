@@ -29,7 +29,7 @@ The virtual environment will now be **automatically activated** in all terminals
 
 ## For Local Development (Windows)
 
-Since the fnwispr client must run on Windows (not in Docker), you'll be developing locally. Follow these steps:
+fnwispr is now a single, unified application that runs entirely on your Windows machine with no Docker or server/client split. Follow these steps:
 
 ### 1. Install Python Extension
 
@@ -55,8 +55,8 @@ The error **"The debug type is not recognized"** means VS Code doesn't have the 
 
 After installing extensions:
 1. Press `F5` or `Ctrl+Shift+D` (Run and Debug)
-2. Select a debug configuration (e.g., "Debug: Client")
-3. You should no longer see the error
+2. Select "Debug: fnwispr"
+3. The app should start with the keyboard listener ready
 
 ### 3. Python Interpreter (Automatic)
 
@@ -67,14 +67,6 @@ The Python interpreter is now automatically configured to use the virtual enviro
 2. Type: `Python: Select Interpreter`
 3. Choose `./venv/Scripts/python.exe` from the list
 
-## For DevContainer Development
-
-If using the DevContainer (for server-only development):
-1. Install the "Dev Containers" extension (`ms-vscode-remote.remote-containers`)
-2. Press `Ctrl+Shift+P`
-3. Type: `Dev Containers: Reopen in Container`
-4. Extensions will be automatically installed inside the container
-
 ## Essential Extensions
 
 | Extension | Purpose |
@@ -83,7 +75,6 @@ If using the DevContainer (for server-only development):
 | ms-python.vscode-pylance | Advanced type checking & IntelliSense |
 | ms-python.black-formatter | Code formatting (matches project settings) |
 | ms-python.flake8 | Linting (matches project settings) |
-| ms-azuretools.vscode-docker | Docker container management |
 
 ## Troubleshooting
 
@@ -97,24 +88,32 @@ If using the DevContainer (for server-only development):
 - Ensure Python 3.8+ is installed on your system
 - Try providing the full path to python.exe
 
-### Debug configurations still not working
-- Verify `.vscode/launch.json` exists
-- Check Output panel → Python Language Server for errors
-- Ensure you're opening the workspace folder, not individual files
+### App fails to start with "No module named 'X'"
+- Run the `Build: Install Dependencies` task
+- Or manually: `Ctrl+Shift+P` → `Tasks: Run Task` → `Build: Install Dependencies`
+
+### Hotkey not working
+- Make sure VS Code window isn't blocking keyboard input (may need to focus another window)
+- Check the log file: `Utility: View Application Logs` task
+- Verify your hotkey config in `client/config.json`
 
 ## Next Steps
 
 Once environment is initialized and extensions are installed:
 
-1. **Start the Whisper Service**
+1. **Test the App**
+   - Press `F5` to start debugging
+   - Press Ctrl+Win to record (or your configured hotkey)
+   - Speak into your microphone
+   - Release the keys to transcribe
+
+2. **Run Tests**
    - Press `Ctrl+Shift+P` → `Tasks: Run Task`
-   - Select `Run: Start Whisper Service` (or `Run (No Debug): Server in Docker`)
-   - Wait for service to be healthy (check logs: `Utility: View Server Logs` task)
+   - Select `Test: All Tests`
 
-2. **Run or Debug the Client**
-   - Press `F5` for debugging with breakpoints
-   - Or press `Ctrl+Shift+P` → `Tasks: Run Task` → `Run (No Debug): Client` to run without debugging
+3. **Format and Lint Code**
+   - Press `Ctrl+Shift+P` → `Tasks: Run Task`
+   - Select `Lint: All` to format and check code
 
-3. **Review Available Tasks**
+4. **Review Available Tasks**
    - Press `Ctrl+Shift+P` → `Tasks: Run Task` to see all available development tasks
-   - Common tasks: `Dev: Rebuild and Restart`, `Test: All Tests`, `Lint: All`
