@@ -6,7 +6,7 @@ Since the fnwispr client must run on Windows (not in Docker), you'll be developi
 
 ### 1. Install Python Extension
 
-The error **"The debug type is not recognized"** means VS Code doesn't have the Python extension installed.
+The error **"The debug type is not recognized"** means VS Code doesn't have the Python extension (which includes debugpy) installed.
 
 **Option A: Install All Recommended Extensions (Easiest)**
 1. Open VS Code

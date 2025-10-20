@@ -4,7 +4,7 @@
     // Client Debugging
     {
       "name": "Debug: Client",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/client/main.py",
       "console": "integratedTerminal",
@@ -17,7 +17,7 @@
     },
     {
       "name": "Debug: Client (No Server Check)",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/client/main.py",
       "console": "integratedTerminal",
@@ -31,7 +31,7 @@
     // Server Debugging (Local - not in Docker)
     {
       "name": "Debug: Server (Local)",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "uvicorn",
       "args": [
@@ -52,7 +52,7 @@
     },
     {
       "name": "Debug: Server (Local - Tiny Model)",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "uvicorn",
       "args": [
@@ -75,7 +75,7 @@
     // Attach to running Docker container
     {
       "name": "Debug: Attach to Docker Server",
-      "type": "python",
+      "type": "debugpy",
       "request": "attach",
       "connect": {
         "host": "localhost",
@@ -92,7 +92,7 @@
     // Python Testing
     {
       "name": "Debug: Current Test File",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "pytest",
       "args": [
@@ -105,7 +105,7 @@
     },
     {
       "name": "Debug: All Tests",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "pytest",
       "args": [
