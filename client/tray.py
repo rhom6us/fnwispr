@@ -7,6 +7,7 @@ import pystray
 from PIL import Image, ImageDraw
 import logging
 import threading
+import traceback
 from typing import Callable, Dict, List, Optional
 import sounddevice as sd
 
@@ -114,43 +115,56 @@ class TrayManager:
         menu_items = []
 
         # Settings
-        menu_items.append(pystray.MenuItem("Settings...", lambda icon, item: self._on_settings_click()))
+        menu_items.append(pystray.MenuItem("Settings...", self._on_settings_click))
 
         menu_items.append(pystray.Menu.SEPARATOR)
 
-        # Model submenu
+        # Model submenu - create factory functions for checked state
         models = ["tiny", "base", "small", "medium", "large"]
-        current_model = self.get_current_model()
-        model_items = [
-            pystray.MenuItem(
-                model,
-                lambda icon, item, m=model: self._on_model_select(m),
-                checked=lambda item, m=model: current_model == m,
+        model_items = []
+        for model in models:
+            # Create closures to capture model value correctly
+            def make_model_callback(m):
+                return lambda icon, item: self._on_model_select(m)
+
+            def make_model_checked(m):
+                return lambda item: self.get_current_model() == m
+
+            model_items.append(
+                pystray.MenuItem(
+                    model,
+                    make_model_callback(model),
+                    checked=make_model_checked(model),
+                )
             )
-            for model in models
-        ]
         menu_items.append(pystray.MenuItem("Model", pystray.Menu(*model_items)))
 
         # Microphone submenu
         input_devices = self._get_input_devices()
-        current_device = self.get_current_device()
 
         # Add "Default" option
         device_items = [
             pystray.MenuItem(
                 "Default",
                 lambda icon, item: self._on_device_select(None),
-                checked=lambda item: current_device is None,
+                checked=lambda item: self.get_current_device() is None,
             )
         ]
 
         # Add actual devices
         for device in input_devices:
+            # Create closures to capture device index correctly
+            def make_device_callback(idx):
+                return lambda icon, item: self._on_device_select(idx)
+
+            def make_device_checked(idx):
+                return lambda item: self.get_current_device() == idx
+
             device_items.append(
                 pystray.MenuItem(
                     device["name"],
-                    lambda icon, item, idx=device["index"]: self._on_device_select(idx),
-                    checked=lambda item, idx=device["index"]: current_device == idx,
+                    make_device_callback(device["index"]),
+                    checked=make_device_checked(device["index"]),
                 )
             )
 
@@ -159,7 +173,7 @@ class TrayManager:
         menu_items.append(pystray.Menu.SEPARATOR)
 
         # Exit
-        menu_items.append(pystray.MenuItem("Exit", lambda icon, item: self._on_exit_click()))
+        menu_items.append(pystray.MenuItem("Exit", self._on_exit_click))
 
         return pystray.Menu(*menu_items)
 
@@ -212,6 +226,7 @@ class TrayManager:
             self.icon.run()
         except Exception as e:
             logger.error(f"Failed to run tray icon: {e}")
+            logger.error(traceback.format_exc())
 
     def quit(self):
         """Stop the tray icon"""
