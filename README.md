@@ -82,7 +82,7 @@ Edit `client/config.json` to customize fnwispr:
 
 ```json
 {
-  "hotkey": "ctrl+alt",
+  "hotkey": "ctrl+win",
   "server_url": "http://localhost:8000",
   "model": "base",
   "sample_rate": 16000,
@@ -95,12 +95,34 @@ Edit `client/config.json` to customize fnwispr:
 
 | Option | Description | Default | Options |
 |--------|-------------|---------|---------|
-| `hotkey` | Key combination to activate recording | `"ctrl+alt"` | Any combination like `"ctrl+shift"`, `"ctrl+alt+a"` |
+| `hotkey` | Key combination to activate recording | `"ctrl+win"` | See "Hotkey Configuration" below |
 | `server_url` | Whisper service URL | `"http://localhost:8000"` | Any valid URL |
 | `model` | Whisper model size | `"base"` | `tiny`, `base`, `small`, `medium`, `large` |
 | `sample_rate` | Audio sample rate | `16000` | 16000 recommended |
 | `microphone_device` | Microphone to use | `null` (default) | Device ID number |
 | `language` | Force specific language | `null` (auto-detect) | `"en"`, `"es"`, `"fr"`, etc. |
+
+### Hotkey Configuration
+
+The `hotkey` option supports flexible key combinations:
+
+**Modifier keys (both left and right work):**
+- `ctrl` - Either left or right Ctrl
+- `alt` - Either left or right Alt
+- `shift` - Either left or right Shift
+- `win` or `cmd` - Windows/Command key
+
+**Specific variants (if you want only left or right):**
+- `ctrl_l`, `ctrl_r` - Left or right Ctrl specifically
+- `alt_l`, `alt_r` - Left or right Alt specifically
+- `shift_l`, `shift_r` - Left or right Shift specifically
+
+**Examples:**
+- `"ctrl+win"` - Either Ctrl + either Windows key (recommended)
+- `"ctrl+alt"` - Either Ctrl + either Alt
+- `"ctrl_l+win"` - Only left Ctrl + either Windows key
+- `"alt_r+shift"` - Only right Alt + either Shift
+- `"ctrl+shift+a"` - Either Ctrl + either Shift + 'a' key
 
 ### Whisper Model Selection
 

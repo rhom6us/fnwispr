@@ -6,6 +6,7 @@
       "name": "Debug: Client",
       "type": "debugpy",
       "request": "launch",
+      "python": "${workspaceFolder}/venv/Scripts/python.exe",
       "program": "${workspaceFolder}/client/main.py",
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}/client",
@@ -19,6 +20,7 @@
       "name": "Debug: Client (No Server Check)",
       "type": "debugpy",
       "request": "launch",
+      "python": "${workspaceFolder}/venv/Scripts/python.exe",
       "program": "${workspaceFolder}/client/main.py",
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}/client",
@@ -33,6 +35,7 @@
       "name": "Debug: Server (Local)",
       "type": "debugpy",
       "request": "launch",
+      "python": "${workspaceFolder}/venv/Scripts/python.exe",
       "module": "uvicorn",
       "args": [
         "main:app",
@@ -54,6 +57,7 @@
       "name": "Debug: Server (Local - Tiny Model)",
       "type": "debugpy",
       "request": "launch",
+      "python": "${workspaceFolder}/venv/Scripts/python.exe",
       "module": "uvicorn",
       "args": [
         "main:app",
@@ -94,6 +98,7 @@
       "name": "Debug: Current Test File",
       "type": "debugpy",
       "request": "launch",
+      "python": "${workspaceFolder}/venv/Scripts/python.exe",
       "module": "pytest",
       "args": [
         "${file}",
@@ -107,6 +112,7 @@
       "name": "Debug: All Tests",
       "type": "debugpy",
       "request": "launch",
+      "python": "${workspaceFolder}/venv/Scripts/python.exe",
       "module": "pytest",
       "args": [
         "tests/",

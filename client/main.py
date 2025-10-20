@@ -3,21 +3,21 @@ fnwispr Client - Windows Speech-to-Text Hotkey Application
 Captures audio when hotkey is pressed and inserts transcribed text
 """
 
-import os
-import sys
 import json
 import logging
+import os
+import sys
 import tempfile
 import threading
 from pathlib import Path
 from typing import Optional
 
+import numpy as np
+import pyautogui
 import requests
 import sounddevice as sd
-import numpy as np
-from scipy.io.wavfile import write as write_wav
 from pynput import keyboard
-import pyautogui
+from scipy.io.wavfile import write as write_wav
 
 # Configure logging
 logging.basicConfig(
@@ -48,10 +48,11 @@ class FnwisprClient:
         self.audio_data = []
         self.sample_rate = self.config.get("sample_rate", 16000)
         self.is_running = True
+        self.current_keys = set()
 
         # Parse hotkey combination
-        self.hotkey_combo = self.parse_hotkey(self.config.get("hotkey", "ctrl+alt"))
-        logger.info(f"Hotkey combination: {self.config.get('hotkey', 'ctrl+alt')}")
+        self.hotkey_combo = self.parse_hotkey(self.config.get("hotkey", "ctrl+win"))
+        logger.info(f"Hotkey combination: {self.config.get('hotkey', 'ctrl+win')}")
         logger.info(f"Server URL: {self.config.get('server_url')}")
         logger.info(f"Whisper model: {self.config.get('model', 'base')}")
 
@@ -90,12 +91,12 @@ class FnwisprClient:
             Default configuration dictionary
         """
         default_config = {
-            "hotkey": "ctrl+alt",
+            "hotkey": "ctrl+win",
             "server_url": "http://localhost:8000",
             "model": "base",
             "sample_rate": 16000,
             "microphone_device": None,
-            "language": None
+            "language": None,
         }
 
         try:
@@ -107,22 +108,61 @@ class FnwisprClient:
 
         return default_config
 
+    def normalize_key(self, key) -> Optional[object]:
+        """
+        Normalize modifier keys to handle left/right variants
+        Only normalizes if the base key (not the specific variant) is in the hotkey combo.
+
+        Example:
+        - If hotkey is "ctrl+win": ctrl_l and ctrl_r both normalize to ctrl
+        - If hotkey is "ctrl_l+win": ctrl_l and ctrl_r are NOT normalized
+
+        Args:
+            key: Key to normalize
+
+        Returns:
+            Normalized key if applicable, otherwise the original key
+        """
+        # Map left/right variants to their base key
+        if (
+            key == keyboard.Key.ctrl_l or key == keyboard.Key.ctrl_r
+        ) and keyboard.Key.ctrl in self.hotkey_combo:
+            return keyboard.Key.ctrl
+        elif (
+            key == keyboard.Key.alt_l or key == keyboard.Key.alt_r
+        ) and keyboard.Key.alt in self.hotkey_combo:
+            return keyboard.Key.alt
+        elif (
+            key == keyboard.Key.shift_l or key == keyboard.Key.shift_r
+        ) and keyboard.Key.shift in self.hotkey_combo:
+            return keyboard.Key.shift
+        else:
+            return key
+
     def parse_hotkey(self, hotkey_string: str) -> set:
         """
         Parse hotkey string into a set of keys
 
         Args:
-            hotkey_string: String like "ctrl+alt" or "ctrl+shift+a"
+            hotkey_string: String like "ctrl+alt", "ctrl+win", "ctrl_l+win", etc.
+                          Supports: ctrl, alt, shift, win/cmd
+                          Also supports left/right variants: ctrl_l, ctrl_r, alt_l, alt_r, shift_l, shift_r
 
         Returns:
             Set of keyboard.Key or keyboard.KeyCode objects
         """
         key_mapping = {
-            'ctrl': keyboard.Key.ctrl,
-            'alt': keyboard.Key.alt,
-            'shift': keyboard.Key.shift,
-            'cmd': keyboard.Key.cmd,
-            'win': keyboard.Key.cmd,
+            "ctrl": keyboard.Key.ctrl,
+            "ctrl_l": keyboard.Key.ctrl_l,
+            "ctrl_r": keyboard.Key.ctrl_r,
+            "alt": keyboard.Key.alt,
+            "alt_l": keyboard.Key.alt_l,
+            "alt_r": keyboard.Key.alt_r,
+            "shift": keyboard.Key.shift,
+            "shift_l": keyboard.Key.shift_l,
+            "shift_r": keyboard.Key.shift_r,
+            "cmd": keyboard.Key.cmd,
+            "win": keyboard.Key.cmd,
         }
 
         keys = set()
@@ -294,14 +334,18 @@ class FnwisprClient:
             key: Pressed key
         """
         try:
-            # Check if all hotkey keys are currently pressed
-            current_keys = self.listener.current_keys
+            # Normalize the key (handle left/right variants of modifiers)
+            normalized_key = self.normalize_key(key)
 
-            if self.hotkey_combo.issubset(current_keys):
+            # Track currently pressed key
+            self.current_keys.add(normalized_key)
+
+            # Check if all hotkey keys are currently pressed
+            if self.hotkey_combo.issubset(self.current_keys):
                 self.start_recording()
 
-        except AttributeError:
-            pass
+        except Exception as e:
+            logger.debug(f"Error in on_press: {e}")
 
     def on_release(self, key):
         """
@@ -310,20 +354,29 @@ class FnwisprClient:
         Args:
             key: Released key
         """
-        # Stop recording when any of the hotkey keys is released
-        if key in self.hotkey_combo and self.recording:
-            self.stop_recording()
+        try:
+            # Normalize the key (handle left/right variants of modifiers)
+            normalized_key = self.normalize_key(key)
 
-        # Exit on Escape key
-        if key == keyboard.Key.esc:
-            logger.info("Escape pressed, shutting down...")
-            self.is_running = False
-            return False
+            # Remove released key from tracking
+            self.current_keys.discard(normalized_key)
+
+            # Stop recording when any of the hotkey keys is released
+            if normalized_key in self.hotkey_combo and self.recording:
+                self.stop_recording()
+
+            # Exit on Escape key
+            if key == keyboard.Key.esc:
+                logger.info("Escape pressed, shutting down...")
+                self.is_running = False
+                return False
+        except Exception as e:
+            logger.debug(f"Error in on_release: {e}")
 
     def run(self):
         """Run the client"""
         logger.info("fnwispr client starting...")
-        logger.info(f"Press and hold {self.config.get('hotkey', 'ctrl+alt')} to record")
+        logger.info(f"Press and hold {self.config.get('hotkey', 'ctrl+win')} to record")
         logger.info("Press ESC to exit")
 
         # Check server connectivity
@@ -337,25 +390,7 @@ class FnwisprClient:
             on_press=self.on_press,
             on_release=self.on_release
         ) as listener:
-            self.listener = listener
-            # Add current_keys tracking
-            self.listener.current_keys = set()
-
-            # Monkey-patch to track currently pressed keys
-            original_on_press = listener._on_press
-            original_on_release = listener._on_release
-
-            def tracked_on_press(key):
-                self.listener.current_keys.add(key)
-                return original_on_press(key)
-
-            def tracked_on_release(key):
-                self.listener.current_keys.discard(key)
-                return original_on_release(key)
-
-            listener._on_press = tracked_on_press
-            listener._on_release = tracked_on_release
-
+            logger.info("Keyboard listener started")
             listener.join()
 
         logger.info("fnwispr client stopped")

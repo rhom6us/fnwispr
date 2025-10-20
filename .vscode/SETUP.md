@@ -1,5 +1,32 @@
 # VS Code Setup for fnwispr
 
+## Quick Start
+
+### 1. Initialize the Development Environment
+
+First-time setup: Run the initialization task to set up your virtual environment and install all dependencies.
+
+**Option A: Via VS Code Task (Recommended)**
+1. Press `Ctrl+Shift+P`
+2. Type: `Tasks: Run Task`
+3. Select: `Dev: Initialize Environment`
+4. Wait for completion (includes virtual environment setup and dependency installation)
+
+**Option B: Manual via PowerShell**
+```powershell
+.\init.ps1
+```
+
+### 2. Reload VS Code
+
+After initialization, reload VS Code to activate the virtual environment:
+- Press `Ctrl+Shift+P` → type `Developer: Reload Window`
+- Or simply close and reopen VS Code
+
+The virtual environment will now be **automatically activated** in all terminals and used by the Python extension.
+
+---
+
 ## For Local Development (Windows)
 
 Since the fnwispr client must run on Windows (not in Docker), you'll be developing locally. Follow these steps:
@@ -31,11 +58,14 @@ After installing extensions:
 2. Select a debug configuration (e.g., "Debug: Client")
 3. You should no longer see the error
 
-### 3. Select Python Interpreter
+### 3. Python Interpreter (Automatic)
 
+The Python interpreter is now automatically configured to use the virtual environment created by `init.ps1`.
+
+**If you need to manually select it:**
 1. Press `Ctrl+Shift+P`
 2. Type: `Python: Select Interpreter`
-3. Choose your Python installation (3.8+ required)
+3. Choose `./venv/Scripts/python.exe` from the list
 
 ## For DevContainer Development
 
@@ -74,7 +104,17 @@ If using the DevContainer (for server-only development):
 
 ## Next Steps
 
-Once extensions are installed:
-1. Review `.vscode/tasks.json` for available tasks
-2. Try running "Run: Start Whisper Service" task
-3. Use `F5` to start debugging the client or server
+Once environment is initialized and extensions are installed:
+
+1. **Start the Whisper Service**
+   - Press `Ctrl+Shift+P` → `Tasks: Run Task`
+   - Select `Run: Start Whisper Service` (or `Run (No Debug): Server in Docker`)
+   - Wait for service to be healthy (check logs: `Utility: View Server Logs` task)
+
+2. **Run or Debug the Client**
+   - Press `F5` for debugging with breakpoints
+   - Or press `Ctrl+Shift+P` → `Tasks: Run Task` → `Run (No Debug): Client` to run without debugging
+
+3. **Review Available Tasks**
+   - Press `Ctrl+Shift+P` → `Tasks: Run Task` to see all available development tasks
+   - Common tasks: `Dev: Rebuild and Restart`, `Test: All Tests`, `Lint: All`

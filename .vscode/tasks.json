@@ -35,7 +35,7 @@
     {
       "label": "Build: Client Package",
       "type": "shell",
-      "command": "pip",
+      "command": "${workspaceFolder}/venv/Scripts/pip.exe",
       "args": ["install", "-e", "client/"],
       "problemMatcher": [],
       "group": "build",
@@ -85,7 +85,7 @@
     {
       "label": "Run: Client",
       "type": "shell",
-      "command": "python",
+      "command": "${workspaceFolder}/venv/Scripts/python.exe",
       "args": ["client/main.py"],
       "problemMatcher": [],
       "group": "none",
@@ -98,10 +98,47 @@
     {
       "label": "Run: Server (Local)",
       "type": "shell",
-      "command": "python",
+      "command": "${workspaceFolder}/venv/Scripts/python.exe",
       "args": ["server/main.py"],
       "problemMatcher": [],
       "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Run (No Debug): Client",
+      "type": "shell",
+      "command": "${workspaceFolder}/venv/Scripts/python.exe",
+      "args": ["client/main.py"],
+      "problemMatcher": [],
+      "group": "run",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "dependsOn": ["Run: Check Server Health"]
+    },
+    {
+      "label": "Run (No Debug): Server (Local)",
+      "type": "shell",
+      "command": "${workspaceFolder}/venv/Scripts/python.exe",
+      "args": ["server/main.py"],
+      "problemMatcher": [],
+      "group": "run",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Run (No Debug): Server in Docker",
+      "type": "shell",
+      "command": "docker-compose",
+      "args": ["up", "whisper-service"],
+      "problemMatcher": [],
+      "group": "run",
       "presentation": {
         "reveal": "always",
         "panel": "new"
@@ -112,7 +149,7 @@
     {
       "label": "Test: Server Unit Tests",
       "type": "shell",
-      "command": "pytest",
+      "command": "${workspaceFolder}/venv/Scripts/pytest.exe",
       "args": ["tests/server", "-v"],
       "problemMatcher": [],
       "group": {
@@ -127,7 +164,7 @@
     {
       "label": "Test: Client Unit Tests",
       "type": "shell",
-      "command": "pytest",
+      "command": "${workspaceFolder}/venv/Scripts/pytest.exe",
       "args": ["tests/client", "-v"],
       "problemMatcher": [],
       "group": {
@@ -142,7 +179,7 @@
     {
       "label": "Test: All Tests",
       "type": "shell",
-      "command": "pytest",
+      "command": "${workspaceFolder}/venv/Scripts/pytest.exe",
       "args": ["tests/", "-v"],
       "problemMatcher": [],
       "group": {
@@ -157,7 +194,7 @@
     {
       "label": "Test: Coverage Report",
       "type": "shell",
-      "command": "pytest",
+      "command": "${workspaceFolder}/venv/Scripts/pytest.exe",
       "args": ["tests/", "--cov=server", "--cov=client", "--cov-report=html"],
       "problemMatcher": [],
       "group": "test",
@@ -183,10 +220,11 @@
     {
       "label": "Run: Check Server Health",
       "type": "shell",
-      "command": "bash",
+      "command": "powershell",
       "args": [
-        "-c",
-        "echo 'Checking server health...' && curl -f http://localhost:8000/health || echo 'Server not running. Please start with: docker-compose up -d'"
+        "-NoProfile",
+        "-Command",
+        "& { Write-Host 'Checking server health...' -ForegroundColor Cyan; try { Invoke-WebRequest -Uri 'http://localhost:8000/health' -ErrorAction Stop | Out-Null; Write-Host 'Server is healthy!' -ForegroundColor Green } catch { Write-Host 'Server not running. Please start with: docker-compose up -d' -ForegroundColor Red } }"
       ],
       "problemMatcher": [],
       "group": "none",
@@ -222,7 +260,7 @@
     {
       "label": "Utility: Install Client Dependencies",
       "type": "shell",
-      "command": "pip",
+      "command": "${workspaceFolder}/venv/Scripts/pip.exe",
       "args": ["install", "-r", "client/requirements.txt"],
       "problemMatcher": [],
       "group": "none",
@@ -234,7 +272,7 @@
     {
       "label": "Utility: Install Server Dependencies",
       "type": "shell",
-      "command": "pip",
+      "command": "${workspaceFolder}/venv/Scripts/pip.exe",
       "args": ["install", "-r", "server/requirements.txt"],
       "problemMatcher": [],
       "group": "none",
@@ -272,7 +310,7 @@
     {
       "label": "Lint: Black (Format)",
       "type": "shell",
-      "command": "black",
+      "command": "${workspaceFolder}/venv/Scripts/black.exe",
       "args": ["client/", "server/"],
       "problemMatcher": [],
       "group": "none",
@@ -284,7 +322,7 @@
     {
       "label": "Lint: Flake8",
       "type": "shell",
-      "command": "flake8",
+      "command": "${workspaceFolder}/venv/Scripts/flake8.exe",
       "args": ["client/", "server/"],
       "problemMatcher": [],
       "group": "none",
@@ -296,10 +334,11 @@
     {
       "label": "Lint: All",
       "type": "shell",
-      "command": "bash",
+      "command": "powershell",
       "args": [
-        "-c",
-        "echo 'Running Black...' && black client/ server/ && echo 'Running Flake8...' && flake8 client/ server/"
+        "-NoProfile",
+        "-Command",
+        "& { Write-Host 'Running Black...' -ForegroundColor Cyan; & '${workspaceFolder}/venv/Scripts/black.exe' client/ server/; Write-Host 'Running Flake8...' -ForegroundColor Cyan; & '${workspaceFolder}/venv/Scripts/flake8.exe' client/ server/ }"
       ],
       "problemMatcher": [],
       "group": "none",
@@ -311,12 +350,26 @@
 
     // Development Workflow Tasks
     {
+      "label": "Dev: Initialize Environment",
+      "type": "shell",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "init.ps1"],
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "isBackground": false
+    },
+    {
       "label": "Dev: Setup Project",
       "type": "shell",
-      "command": "bash",
+      "command": "powershell",
       "args": [
-        "-c",
-        "pip install -r client/requirements.txt && pip install -r server/requirements.txt && docker-compose build && echo 'Setup complete!'"
+        "-NoProfile",
+        "-Command",
+        "& { & '${workspaceFolder}/venv/Scripts/pip.exe' install -r client/requirements.txt; & '${workspaceFolder}/venv/Scripts/pip.exe' install -r server/requirements.txt; docker-compose build; Write-Host 'Setup complete!' -ForegroundColor Green }"
       ],
       "problemMatcher": [],
       "group": "none",
@@ -328,10 +381,11 @@
     {
       "label": "Dev: Rebuild and Restart",
       "type": "shell",
-      "command": "bash",
+      "command": "powershell",
       "args": [
-        "-c",
-        "docker-compose down && docker-compose build && docker-compose up -d"
+        "-NoProfile",
+        "-Command",
+        "& { docker-compose down; docker-compose build; docker-compose up -d }"
       ],
       "problemMatcher": [],
       "group": "none",

@@ -1,0 +1,18 @@
+# Development dependencies for fnwispr
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Code formatting and linting
+black>=23.0.0
+flake8>=6.0.0
+
+# Type checking
+mypy>=1.0.0
+
+# Debugging
+debugpy>=1.6.0
+
+# Documentation
+sphinx>=7.0.0
